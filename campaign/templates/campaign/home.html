@@ -1,0 +1,87 @@
+{% extends 'campaign/base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div class="hero-content animate-fade-in">
+            <h1 id="main-title">Modern Sound <br> <span style="color: var(--primary-color);">meets</span> Tech Future.</h1>
+            <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2rem;">
+                Experience the new album and unlock exclusive discounts on Starlink, IT hardware, and partner offers.
+            </p>
+            <div class="hero-actions">
+                <a href="#listen" class="btn-primary">Listen Now</a>
+                <a href="#campaign" style="margin-left: 20px; color: white; text-decoration: none; font-weight: 600;">View Rewards</a>
+            </div>
+        </div>
+    </div>
+    <div class="album-cover-wrapper animate-fade-in" style="animation-delay: 0.2s;">
+        <img src="{% static 'images/album_cover.png' %}" alt="Album Cover">
+    </div>
+</section>
+
+<section id="listen" style="background: rgba(124, 77, 255, 0.03);">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <h2 style="font-size: 3rem; margin-bottom: 1rem;">The Experience</h2>
+            <p style="color: var(--text-muted);">Watch the latest visuals and dive into the soundscape.</p>
+        </div>
+        
+        <div class="glass-card" style="aspect-ratio: 16/9; padding: 0; overflow: hidden; max-width: 900px; margin: 0 auto;">
+            <!-- Placeholder for YouTube Embed -->
+            <div style="width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
+                <img src="{% static 'images/album_cover.png' %}" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; filter: blur(10px);">
+                <div style="z-index: 1; text-align: center;">
+                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; cursor: pointer;">
+                        <div style="width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid #000; margin-left: 5px;"></div>
+                    </div>
+                    <p style="font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">Play Music Video</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="campaign">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+            <div>
+                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Partner Rewards</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">
+                    We've partnered with top IT providers and Starlink services to bring you exclusive deals. Simply find one of our QR codes in the city or scan to unlock your unique promo code.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h4 style="color: var(--secondary-color); margin-bottom: 0.5rem;">Starlink</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Up to 15% off installation services.</p>
+                    </div>
+                    <div class="glass-card" style="padding: 1.5rem;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">IT Gear</h4>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Discounts on high-end laptops & gear.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1.5rem;">Unlock Your Code</h3>
+                <form action="{% url 'claim_reward' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="source" value="{{ source|default:'web' }}">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="full_name" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+263..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email (Optional)</label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Claim My Promo Code</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
