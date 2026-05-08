@@ -555,7 +555,7 @@
     <!-- ─── Navigation ─────────────────────────────────── -->
     <nav class="site-nav">
         <div class="container">
-            <a href="/" class="nav-logo"><span>YOUTHin</span>IT</a>
+            <a href="/" class="nav-logo">YOUTH<span style="font-size: 0.6em; vertical-align: middle; color: var(--secondary-color); text-transform: lowercase; margin: 0 2px;">in</span>IT</a>
 
             <div class="nav-links">
                 <a href="/">Home</a>
@@ -563,7 +563,7 @@
                 <a href="{% url 'dashboard' %}">Dashboard</a>
                 <a href="{% url 'logout' %}" class="btn-outline" style="padding: 8px 20px; font-size: 0.8rem; border-color: var(--accent-color); color: var(--accent-color);">Logout</a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn-outline" style="padding: 8px 20px; font-size: 0.8rem;">Sign In</a>
+                <a href="{% url 'login' %}" class="btn-primary" style="padding: 8px 24px; font-size: 0.8rem; background: var(--secondary-color); color: var(--bg-color);">Sign In</a>
                 {% endif %}
                 <a href="#listen">Music</a>
                 <a href="#campaign">Rewards</a>
@@ -579,15 +579,22 @@
 
     <!-- Mobile Drawer -->
     <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile menu">
-        <a href="/" onclick="closeMenu()">Home</a>
         {% if user.is_staff %}
-        <a href="{% url 'dashboard' %}" onclick="closeMenu()">Dashboard</a>
-        <a href="{% url 'logout' %}" onclick="closeMenu()" style="color: var(--accent-color);">Logout</a>
+        <a href="{% url 'dashboard' %}" onclick="closeMenu()" style="font-size: 1.5rem; color: var(--secondary-color);">DASHBOARD</a>
         {% else %}
-        <a href="{% url 'login' %}" onclick="closeMenu()">Sign In</a>
+        <a href="{% url 'login' %}" onclick="closeMenu()" style="font-size: 1.5rem; color: var(--secondary-color);">SIGN IN</a>
         {% endif %}
+        
+        <div style="height: 1px; width: 40px; background: var(--border); margin: 10px 0;"></div>
+        
+        <a href="/" onclick="closeMenu()">Home</a>
         <a href="#listen" onclick="closeMenu()">Music</a>
         <a href="#campaign" onclick="closeMenu()">Rewards</a>
+        
+        {% if user.is_staff %}
+        <a href="{% url 'logout' %}" onclick="closeMenu()" style="font-size: 1.2rem; opacity: 0.6; margin-top: 20px;">Logout</a>
+        {% endif %}
+        
         <p class="mobile-menu-badge">YOUTHinIT © 2026</p>
     </div>
 
