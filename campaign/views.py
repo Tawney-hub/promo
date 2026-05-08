@@ -66,7 +66,9 @@ def create_location(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         slug = request.POST.get('slug')
-        CampaignLocation.objects.create(name=name, slug=slug)
+        desc = request.POST.get('description', '')
+        youtube_url = request.POST.get('youtube_url')
+        CampaignLocation.objects.create(name=name, slug=slug, description=desc, youtube_url=youtube_url)
         messages.success(request, f"Location '{name}' created successfully!")
     return redirect('dashboard')
 
@@ -111,8 +113,21 @@ def scan_landing(request, slug):
         user_agent=request.META.get('HTTP_USER_AGENT')
     )
     
-    # Redirect to home with source context
-    return redirect(f'/?src={slug}')
+    # Process YouTube URL for embedding
+    embed_url = None
+    if location.youtube_url:
+        if 'watch?v=' in location.youtube_url:
+            embed_url = location.youtube_url.replace('watch?v=', 'embed/')
+        elif 'youtu.be/' in location.youtube_url:
+            embed_url = location.youtube_url.replace('youtu.be/', 'youtube.com/embed/')
+        else:
+            embed_url = location.youtube_url
+
+    # Render dedicated landing page
+    return render(request, 'campaign/scan_landing.html', {
+        'location': location,
+        'embed_url': embed_url
+    })
 
 def claim_reward(request):
     if request.method == 'POST':

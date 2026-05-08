@@ -334,7 +334,7 @@
 
     <!-- Modals -->
     <div id="locationModal" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px);">
-        <div class="glass-card" style="max-width: 400px; width: 100%;">
+        <div class="glass-card" style="max-width: 500px; width: 100%;">
             <h2 style="font-family: var(--font-display); margin-bottom: 24px;">ADD NEW LOCATION</h2>
             <form action="{% url 'create_location' %}" method="POST">
                 {% csrf_token %}
@@ -342,13 +342,21 @@
                     <label>Location Name</label>
                     <input type="text" name="name" placeholder="e.g. City Taxi #42" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 15px;">
                     <label>Slug (Tracking ID)</label>
                     <input type="text" name="slug" placeholder="e.g. taxi-42" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Description (Optional)</label>
+                    <textarea name="description" placeholder="Short info about this scan spot..." style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; height: 80px;"></textarea>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>YouTube Video URL (Optional)</label>
+                    <input type="url" name="youtube_url" placeholder="https://youtube.com/watch?v=..." style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
                     <button type="button" onclick="closeModal('locationModal')" class="btn-outline" style="flex: 1;">Cancel</button>
-                    <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Create</button>
+                    <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Create Node</button>
                 </div>
             </form>
         </div>
