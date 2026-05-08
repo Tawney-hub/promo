@@ -2,84 +2,812 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* ─── Page-specific overrides ─────────────────────────────────── */
+    main {
+        padding-top: var(--nav-h);
+    }
+
+    /* ─── Hero ─────────────────────────────────── */
+    .hero {
+        min-height: 100svh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 3rem;
+        padding: clamp(3rem, 8vw, 6rem) 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Background blobs */
+    .hero::before {
+        content: '';
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(124, 77, 255, 0.18) 0%, transparent 70%);
+        top: -100px;
+        left: -100px;
+        pointer-events: none;
+        animation: blobDrift 8s ease-in-out infinite alternate;
+    }
+
+    .hero::after {
+        content: '';
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(0, 229, 255, 0.12) 0%, transparent 70%);
+        bottom: -80px;
+        right: 5%;
+        pointer-events: none;
+        animation: blobDrift 10s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes blobDrift {
+        from {
+            transform: translate(0, 0) scale(1);
+        }
+
+        to {
+            transform: translate(30px, 20px) scale(1.1);
+        }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 229, 255, 0.08);
+        border: 1px solid rgba(0, 229, 255, 0.2);
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--secondary-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-eyebrow::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: var(--secondary-color);
+        border-radius: 50%;
+        animation: pulseGlow 1.5s ease-in-out infinite;
+        box-shadow: 0 0 8px var(--secondary-color);
+    }
+
+    .hero h1 {
+        font-family: var(--font-display);
+        font-size: clamp(3.2rem, 7vw, 6.5rem);
+        line-height: 0.95;
+        letter-spacing: 2px;
+        margin-bottom: 1.5rem;
+        color: var(--text-main);
+    }
+
+    .hero h1 .accent {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-desc {
+        font-size: clamp(1rem, 2vw, 1.15rem);
+        color: var(--text-muted);
+        max-width: 440px;
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+
+    .hero-stat-val {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        color: var(--text-main);
+        line-height: 1;
+        letter-spacing: 1px;
+    }
+
+    .hero-stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* Album artwork */
+    .hero-visual {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .album-frame {
+        position: relative;
+        width: clamp(260px, 40vw, 460px);
+        aspect-ratio: 1;
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 24px 80px rgba(0, 0, 0, 0.6),
+            0 0 60px rgba(124, 77, 255, 0.25);
+        animation: floatAlbum 5s ease-in-out infinite;
+    }
+
+    @keyframes floatAlbum {
+
+        0%,
+        100% {
+            transform: translateY(0) rotate(-1deg);
+        }
+
+        50% {
+            transform: translateY(-16px) rotate(1deg);
+        }
+    }
+
+    .album-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* Orbiting ring */
+    .album-ring {
+        position: absolute;
+        inset: -20px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(124, 77, 255, 0.25);
+        animation: orbitSpin 12s linear infinite;
+    }
+
+    .album-ring::before {
+        content: '';
+        position: absolute;
+        top: 10%;
+        left: -5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    @keyframes orbitSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ─── Listen Section ─────────────────────────────────── */
+    .listen-section {
+        padding: clamp(4rem, 8vw, 7rem) 0;
+        background: rgba(124, 77, 255, 0.03);
+        position: relative;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    }
+
+    .section-tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        letter-spacing: 2px;
+        line-height: 1;
+        color: var(--text-main);
+    }
+
+    .section-header p {
+        color: var(--text-muted);
+        margin-top: 1rem;
+        font-size: clamp(0.95rem, 2vw, 1.1rem);
+    }
+
+    .video-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        border-radius: 24px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        position: relative;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+        cursor: pointer;
+    }
+
+    .video-bg {
+        position: absolute;
+        inset: 0;
+    }
+
+    .video-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.3) saturate(0.5);
+        transition: filter 0.4s ease;
+    }
+
+    .video-wrapper:hover .video-bg img {
+        filter: brightness(0.2) saturate(0.3);
+    }
+
+    .video-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(124, 77, 255, 0.15), rgba(0, 229, 255, 0.08));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        z-index: 1;
+    }
+
+    .play-circle {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .video-wrapper:hover .play-circle {
+        transform: scale(1.15);
+        background: rgba(124, 77, 255, 0.4);
+        border-color: var(--primary-color);
+    }
+
+    .play-circle svg {
+        margin-left: 4px;
+    }
+
+    .video-label {
+        font-weight: 800;
+        font-size: 0.85rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Track list */
+    .tracklist {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
+        max-width: 900px;
+        margin: 2.5rem auto 0;
+    }
+
+    .track-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.9rem 1.25rem;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+
+    .track-item:hover {
+        border-color: rgba(124, 77, 255, 0.4);
+        background: rgba(124, 77, 255, 0.07);
+        transform: translateY(-2px);
+    }
+
+    .track-num {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .track-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .track-dur {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        flex-shrink: 0;
+    }
+
+    /* ─── Campaign Section ─────────────────────────────────── */
+    .campaign-section {
+        padding: clamp(4rem, 8vw, 7rem) 0;
+    }
+
+    .campaign-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: clamp(2rem, 5vw, 4rem);
+        align-items: start;
+    }
+
+    .campaign-left h2 {
+        font-family: var(--font-display);
+        font-size: clamp(2.5rem, 5vw, 4.5rem);
+        line-height: 1;
+        letter-spacing: 2px;
+        margin-bottom: 1.25rem;
+    }
+
+    .campaign-left p {
+        color: var(--text-muted);
+        line-height: 1.75;
+        font-size: clamp(0.9rem, 1.8vw, 1rem);
+        margin-bottom: 2rem;
+    }
+
+    .partner-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .partner-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem;
+        transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .partner-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .partner-card:nth-child(1) {
+        border-top: 2px solid var(--secondary-color);
+    }
+
+    .partner-card:nth-child(2) {
+        border-top: 2px solid var(--primary-color);
+    }
+
+    .partner-card:nth-child(3) {
+        border-top: 2px solid var(--accent-color);
+    }
+
+    .partner-card:nth-child(4) {
+        border-top: 2px solid #FFD700;
+    }
+
+    .partner-card h4 {
+        font-weight: 800;
+        font-size: 0.95rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .partner-card:nth-child(1) h4 {
+        color: var(--secondary-color);
+    }
+
+    .partner-card:nth-child(2) h4 {
+        color: var(--primary-color);
+    }
+
+    .partner-card:nth-child(3) h4 {
+        color: var(--accent-color);
+    }
+
+    .partner-card:nth-child(4) h4 {
+        color: #FFD700;
+    }
+
+    .partner-card p {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    /* QR hint */
+    .qr-hint {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(0, 229, 255, 0.06);
+        border: 1px solid rgba(0, 229, 255, 0.15);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        margin-top: 1.5rem;
+    }
+
+    .qr-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        color: var(--secondary-color);
+    }
+
+    .qr-hint p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    .qr-hint strong {
+        color: var(--secondary-color);
+    }
+
+    /* Form card */
+    .form-card {
+        position: relative;
+    }
+
+    .form-card h3 {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 1.75rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .form-card .btn-primary {
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    .form-footer {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    .form-footer svg {
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+
+    /* ─── Responsive ─────────────────────────────────── */
+    @media (max-width: 900px) {
+        .hero {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding-top: calc(var(--nav-h) + 2rem);
+            min-height: unset;
+        }
+
+        .hero::after {
+            display: none;
+        }
+
+        .hero-desc {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            justify-content: center;
+        }
+
+        .hero-stats {
+            justify-content: center;
+        }
+
+        .hero-visual {
+            order: -1;
+        }
+
+        .album-frame {
+            width: clamp(200px, 55vw, 340px);
+        }
+
+        .campaign-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 540px) {
+        .hero h1 {
+            font-size: clamp(2.6rem, 14vw, 3.5rem);
+        }
+
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero-actions a,
+        .hero-actions button {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .partner-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .glass-card {
+            padding: 1.25rem;
+        }
+
+        .form-card h3 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- ─── HERO ─────────────────────────────────── -->
 <section class="hero">
-    <div class="container">
-        <div class="hero-content animate-fade-in">
-            <h1 id="main-title">Modern Sound <br> <span style="color: var(--primary-color);">meets</span> Tech Future.</h1>
-            <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2rem;">
-                Experience the new album and unlock exclusive discounts on Starlink, IT hardware, and partner offers.
+    <!-- Live Stats Ticker -->
+    <div style="position: absolute; top: 20px; left: 0; width: 100%; overflow: hidden; white-space: nowrap; pointer-events: none; z-index: 10; opacity: 0.6;">
+        <div style="display: inline-block; animation: ticker 30s linear infinite; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;">
+            <span style="color: var(--secondary-color);">● LIVE:</span> NEW LEAD FROM HARARE TERMINUS ... <span style="color: var(--primary-color);">● NEW:</span> PROMO CODE UNLOCKED IN BULAWAY ... <span style="color: var(--secondary-color);">● LIVE:</span> 15% DISCOUNT CLAIMED ... <span style="color: var(--primary-color);">● NEW:</span> STARLINK OFFER REDEEMED ... 
+            <span style="color: var(--secondary-color);">● LIVE:</span> NEW LEAD FROM HARARE TERMINUS ... <span style="color: var(--primary-color);">● NEW:</span> PROMO CODE UNLOCKED IN BULAWAY ... <span style="color: var(--secondary-color);">● LIVE:</span> 15% DISCOUNT CLAIMED ... <span style="color: var(--primary-color);">● NEW:</span> STARLINK OFFER REDEEMED ... 
+        </div>
+    </div>
+    <style>
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+
+    <div class="container" style="display: contents;">
+        <div class="hero-content animate-fade-in" style="padding: 0 clamp(16px,5vw,48px);">
+            {% if current_location %}
+            <div class="hero-eyebrow" style="background: rgba(124, 77, 255, 0.1); border-color: var(--primary-color); color: var(--primary-color);">
+                Scanning from: {{ current_location.name }}
+            </div>
+            {% else %}
+            <div class="hero-eyebrow">Digital Future Now</div>
+            {% endif %}
+            <h1>The Rhythm<br><span class="accent">of</span> Innovation.</h1>
+            <p class="hero-desc">
+                Dive into the soundscape of the future. Exclusive rewards for the tech-forward community — Starlink, Hardware, and more.
             </p>
             <div class="hero-actions">
-                <a href="#listen" class="btn-primary">Listen Now</a>
-                <a href="#campaign" style="margin-left: 20px; color: white; text-decoration: none; font-weight: 600;">View Rewards</a>
+                <a href="#listen" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                    </svg>
+                    Experience Audio
+                </a>
+                <a href="#campaign" class="btn-outline">Claim Rewards</a>
             </div>
-        </div>
-    </div>
-    <div class="album-cover-wrapper animate-fade-in" style="animation-delay: 0.2s;">
-        <img src="{% static 'images/album_cover.png' %}" alt="Album Cover">
-    </div>
-</section>
-
-<section id="listen" style="background: rgba(124, 77, 255, 0.03);">
-    <div class="container">
-        <div style="text-align: center; margin-bottom: 4rem;">
-            <h2 style="font-size: 3rem; margin-bottom: 1rem;">The Experience</h2>
-            <p style="color: var(--text-muted);">Watch the latest visuals and dive into the soundscape.</p>
-        </div>
-        
-        <div class="glass-card" style="aspect-ratio: 16/9; padding: 0; overflow: hidden; max-width: 900px; margin: 0 auto;">
-            <!-- Placeholder for YouTube Embed -->
-            <div style="width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
-                <img src="{% static 'images/album_cover.png' %}" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; filter: blur(10px);">
-                <div style="z-index: 1; text-align: center;">
-                    <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; cursor: pointer;">
-                        <div style="width: 0; height: 0; border-top: 15px solid transparent; border-bottom: 15px solid transparent; border-left: 25px solid #000; margin-left: 5px;"></div>
-                    </div>
-                    <p style="font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">Play Music Video</p>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-val">2.4k+</div>
+                    <div class="hero-stat-label">Scans Today</div>
+                </div>
+                <div>
+                    <div class="hero-stat-val">500+</div>
+                    <div class="hero-stat-label">Rewards Given</div>
+                </div>
+                <div>
+                    <div class="hero-stat-val">99%</div>
+                    <div class="hero-stat-label">Uptime</div>
                 </div>
             </div>
         </div>
+
+        <div class="hero-visual animate-fade-in" style="animation-delay:0.2s; padding: 0 clamp(16px,5vw,48px);">
+            <div class="album-frame" style="background: linear-gradient(135deg, #12122a, #06060e);">
+                <img src="{% static 'images/album_cover.png' %}" alt="Album Cover" style="mix-blend-mode: overlay; opacity: 0.8;">
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 20px;">
+                    <div style="font-family: var(--font-display); font-size: 3.5rem; color: #FFF; line-height: 0.8; margin-bottom: 10px;">PROMO<br>2026</div>
+                    <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--secondary-color); letter-spacing: 4px;">ACTIVE_NODE</div>
+                </div>
+                <div class="album-ring"></div>
+                <!-- Scanning line effect -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--secondary-color); box-shadow: 0 0 15px var(--secondary-color); animation: scanLine 4s linear infinite; z-index: 5;"></div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section id="campaign">
+<style>
+    @keyframes scanLine {
+        0% { top: 0; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+</style>
+
+<!-- ─── LISTEN ─────────────────────────────────── -->
+<section id="listen" class="listen-section">
     <div class="container">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
-            <div>
-                <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Partner Rewards</h2>
-                <p style="color: var(--text-muted); margin-bottom: 2rem;">
-                    We've partnered with top IT providers and Starlink services to bring you exclusive deals. Simply find one of our QR codes in the city or scan to unlock your unique promo code.
+        <div class="section-header animate-fade-in">
+            <div class="section-tag">// The Experience</div>
+            <h2>{{ media.music_title }}</h2>
+            <p>Watch the latest visuals and dive into the soundscape.</p>
+        </div>
+
+        <a href="{{ media.youtube_url }}" target="_blank" class="video-wrapper animate-fade-in" style="animation-delay:0.15s; display: block; text-decoration: none;">
+            <div class="video-bg">
+                <img src="{% static 'images/album_cover.png' %}" alt="">
+            </div>
+            <div class="video-overlay">
+                <div class="play-circle">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                </div>
+                <span class="video-label">Play on YouTube</span>
+            </div>
+        </a>
+
+        <div class="tracklist animate-fade-in" style="animation-delay:0.25s;">
+            {% for track in tracks %}
+            <div class="track-item">
+                <span class="track-num">{{ forloop.counter }}</span>
+                <span class="track-name">{{ track.name }}</span>
+                <span class="track-dur">{{ track.duration }}</span>
+            </div>
+            {% empty %}
+            <div class="track-item"><span class="track-num">01</span><span class="track-name">Midnight
+                    Protocol</span><span class="track-dur">3:42</span></div>
+            <div class="track-item"><span class="track-num">02</span><span class="track-name">Neon Grid</span><span
+                    class="track-dur">2:58</span></div>
+            <div class="track-item"><span class="track-num">03</span><span class="track-name">Signal Loss</span><span
+                    class="track-dur">4:11</span></div>
+            <div class="track-item"><span class="track-num">04</span><span class="track-name">Binary Dusk</span><span
+                    class="track-dur">3:27</span></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ─── CAMPAIGN / REWARDS ─────────────────────────────────── -->
+<section id="campaign" class="campaign-section">
+    <div class="container">
+        <div class="campaign-grid">
+            <!-- Left col -->
+            <div class="campaign-left animate-fade-in">
+                <div class="section-tag">// Partner Rewards</div>
+                <h2>Unlock Your Deal.</h2>
+                <p>
+                    We've partnered with top IT providers and Starlink services to bring you exclusive deals. Find one
+                    of our QR codes in the city, or fill in the form to claim your unique promo code.
                 </p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="glass-card" style="padding: 1.5rem;">
-                        <h4 style="color: var(--secondary-color); margin-bottom: 0.5rem;">Starlink</h4>
-                        <p style="font-size: 0.9rem; color: var(--text-muted);">Up to 15% off installation services.</p>
+
+                <div class="partner-cards">
+                    <div class="partner-card" style="grid-column: span 2; border-top: 3px solid var(--secondary-color); position: relative;">
+                        <div style="position: absolute; top: 15px; right: 20px; font-size: 0.65rem; font-family: var(--font-mono); background: rgba(0,229,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--secondary-color);">
+                            LIVE: {{ claim_count }} CLAIMS
+                        </div>
+                        <h4>{{ media.it_ad_title }}</h4>
+                        <p>{{ media.it_ad_desc }}</p>
+                        <a href="{{ media.it_ad_link }}" target="_blank" style="display: inline-block; margin-top: 10px; font-size: 0.75rem; color: var(--secondary-color); font-weight: 700; text-decoration: none;">LEARN MORE →</a>
                     </div>
-                    <div class="glass-card" style="padding: 1.5rem;">
-                        <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">IT Gear</h4>
-                        <p style="font-size: 0.9rem; color: var(--text-muted);">Discounts on high-end laptops & gear.</p>
+                    <div class="partner-card">
+                        <h4>Cloud Services</h4>
+                        <p>Free trial + 20% off first 3 months.</p>
+                    </div>
+                    <div class="partner-card">
+                        <h4>YOUTHinIT Shop</h4>
+                        <p>Merch drops with exclusive fan pricing.</p>
                     </div>
                 </div>
+
+                <div class="qr-hint">
+                    <svg class="qr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <path d="M14 14h2v2h-2zM18 14h3M14 18h3M20 18v3M17 21h3" />
+                    </svg>
+                    <p>Spot a <strong>YOUTHinIT QR code</strong> in Harare? Scan it to auto-fill your code and get a
+                        bonus reward.</p>
+                </div>
             </div>
-            <div class="glass-card">
-                <h3 style="margin-bottom: 1.5rem;">Unlock Your Code</h3>
-                <form action="{% url 'claim_reward' %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="source" value="{{ source|default:'web' }}">
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="full_name" placeholder="John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+263..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email (Optional)</label>
-                        <input type="email" id="email" name="email" placeholder="john@example.com">
-                    </div>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Claim My Promo Code</button>
-                </form>
+
+            <!-- Right col: Form -->
+            <div class="animate-fade-in" style="animation-delay:0.15s;">
+                <div class="glass-card form-card">
+                    <h3>Claim Your Code</h3>
+                    <p class="form-subtitle">Fill in your details and we'll generate a personalised promo code
+                        instantly.</p>
+
+                    <form action="{% url 'claim_reward' %}" method="POST" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="source" value="{{ source|default:'web' }}">
+
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="full_name" placeholder="John Doe" required
+                                autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+263 7XX XXX XXX" required
+                                autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email <span
+                                    style="color:var(--text-muted);font-weight:400;">(Optional)</span></label>
+                            <input type="email" id="email" name="email" placeholder="john@example.com"
+                                autocomplete="email">
+                        </div>
+
+                        <button type="submit" class="btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                            </svg>
+                            Claim My Promo Code
+                        </button>
+                    </form>
+
+                    <p class="form-footer">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                        </svg>
+                        Your data is safe. We never share your details with third parties.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

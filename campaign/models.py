@@ -41,3 +41,27 @@ class ScanLog(models.Model):
 
     def __str__(self):
         return f"Scan at {self.location.name} on {self.scanned_at}"
+
+class MediaContent(models.Model):
+    # Music Section
+    youtube_url = models.URLField(default="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    music_title = models.CharField(max_length=200, default="Midnight Protocol")
+    
+    # IT Section
+    it_ad_title = models.CharField(max_length=200, default="Premium IT Support")
+    it_ad_desc = models.TextField(default="Get 15% off your first Starlink installation.")
+    it_ad_link = models.URLField(default="https://example.com")
+    
+    # Linked Campaign
+    featured_promo = models.ForeignKey(PromoCode, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+
+class MusicTrack(models.Model):
+    title = models.CharField(max_length=200)
+    artist = models.CharField(max_length=200, default="YOUTHinIT")
+    audio_file = models.FileField(upload_to='music/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.artist} - {self.title}"

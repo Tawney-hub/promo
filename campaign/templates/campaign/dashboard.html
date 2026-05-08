@@ -1,0 +1,550 @@
+{% extends 'campaign/base.html' %}
+{% load static %}
+
+{% block title %}Owner Dashboard | Artist Promo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding-top: 120px;
+        margin-bottom: 40px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--secondary-color);
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        right: -20px;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+        opacity: 0.1;
+        pointer-events: none;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .stat-trend {
+        font-size: 0.8rem;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .trend-up { color: #00E676; }
+    .trend-neutral { color: var(--secondary-color); }
+
+    /* Visual Sections */
+    .dashboard-main {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .chart-container {
+        min-height: 400px;
+    }
+
+    .leads-table-container {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    /* Table Styles */
+    .data-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 12px 16px;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .data-table tr {
+        background: rgba(255, 255, 255, 0.02);
+        transition: background 0.2s;
+    }
+
+    .data-table tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .data-table td {
+        padding: 16px;
+        color: var(--text-main);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td:first-child {
+        border-left: 1px solid var(--border);
+        border-radius: 12px 0 0 12px;
+    }
+
+    .data-table td:last-child {
+        border-right: 1px solid var(--border);
+        border-radius: 0 12px 12px 0;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .badge-primary { background: rgba(124, 77, 255, 0.2); color: #B388FF; border: 1px solid rgba(124, 77, 255, 0.3); }
+    .badge-secondary { background: rgba(0, 229, 255, 0.1); color: #84FFFF; border: 1px solid rgba(0, 229, 255, 0.2); }
+
+    @media (max-width: 1024px) {
+        .dashboard-main {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+        }
+        .dashboard-header {
+            padding-top: 100px;
+            text-align: center;
+        }
+        .dashboard-header > div {
+            justify-content: center !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="dashboard-header animate-fade-in">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <h1 style="font-family: var(--font-display); font-size: clamp(2.5rem, 8vw, 4rem); line-height: 0.9;">
+                    COMMAND <span style="color: var(--secondary-color);">CENTER</span>
+                </h1>
+                <p style="color: var(--text-muted); margin-top: 12px; font-size: 1.1rem;">Monitoring campaign performance and lead conversion.</p>
+            </div>
+            <div style="padding-bottom: 10px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button onclick="openModal('locationModal')" class="btn-primary" style="border-radius: 12px; font-size: 0.8rem; padding: 10px 20px; background: var(--secondary-color); color: var(--bg-color);">
+                    + Add Location
+                </button>
+                <button onclick="openModal('promoModal')" class="btn-primary" style="border-radius: 12px; font-size: 0.8rem; padding: 10px 20px; background: var(--primary-color);">
+                    + Add Promo Code
+                </button>
+                <a href="{% url 'export_leads_csv' %}" class="btn-outline" style="border-radius: 12px; font-size: 0.8rem; padding: 10px 20px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Export Leads CSV
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card animate-fade-in" style="--glow-color: var(--primary-color); animation-delay: 0.1s;">
+            <p class="stat-label">Total Scans</p>
+            <p class="stat-value">{{ total_scans }}</p>
+            <div class="stat-trend trend-neutral">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Traffic Flowing
+            </div>
+        </div>
+
+        <div class="stat-card animate-fade-in" style="--glow-color: var(--secondary-color); animation-delay: 0.2s;">
+            <p class="stat-label">Total Leads</p>
+            <p class="stat-value">{{ total_leads }}</p>
+            <div class="stat-trend trend-up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                    <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                Signups Growing
+            </div>
+        </div>
+
+        <div class="stat-card animate-fade-in" style="--glow-color: var(--accent-color); animation-delay: 0.3s;">
+            <p class="stat-label">Conversion Rate</p>
+            <p class="stat-value">{{ conversion_rate }}%</p>
+            <div class="stat-trend trend-neutral">
+                Optimized
+            </div>
+        </div>
+
+        <div class="stat-card animate-fade-in" style="--glow-color: #FFFFFF; animation-delay: 0.4s;">
+            <p class="stat-label">Promo Codes</p>
+            <p class="stat-value">{{ total_codes }}</p>
+            <div class="stat-trend trend-neutral">
+                Active Rewards
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Analytics -->
+    <div class="dashboard-main">
+        <!-- Media Management -->
+        <div class="glass-card animate-fade-in" style="animation-delay: 0.4s;">
+            <h3 style="font-family: var(--font-display); margin-bottom: 24px; letter-spacing: 1px;">MEDIA & ADS</h3>
+            <form action="{% url 'update_media_content' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">YouTube Music Link</label>
+                    <input type="url" name="youtube_url" value="{{ media.youtube_url }}" placeholder="https://youtube.com/..." required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px;">
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Music Title</label>
+                    <input type="text" name="music_title" value="{{ media.music_title }}" placeholder="Song Name" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px;">
+                </div>
+                
+                <div style="height: 1px; background: var(--border); margin: 30px 0;"></div>
+                
+                <div class="form-group">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Featured IT Ad Title</label>
+                    <input type="text" name="it_ad_title" value="{{ media.it_ad_title }}" placeholder="Starlink Installation" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px;">
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Ad Description</label>
+                    <textarea name="it_ad_desc" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px; height: 80px;">{{ media.it_ad_desc }}</textarea>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Ad External Link</label>
+                    <input type="url" name="it_ad_link" value="{{ media.it_ad_link }}" placeholder="https://..." required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px;">
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Featured Campaign / Reward</label>
+                    <select name="featured_promo" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; margin-top: 8px;">
+                        <option value="">-- Select a Promo --</option>
+                        {% for promo in all_promos %}
+                        <option value="{{ promo.id }}" {% if media.featured_promo_id == promo.id %}selected{% endif %}>
+                            {{ promo.code }} ({{ promo.get_reward_type_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 30px; justify-content: center;">
+                    Save Content Updates
+                </button>
+            </form>
+        </div>
+
+        <!-- Music Upload & Library -->
+        <div class="glass-card animate-fade-in" style="animation-delay: 0.5s;">
+            <h3 style="font-family: var(--font-display); margin-bottom: 24px; letter-spacing: 1px;">MUSIC LIBRARY</h3>
+            
+            <form action="{% url 'upload_music' %}" method="POST" enctype="multipart/form-data" style="margin-bottom: 32px; padding: 20px; border: 1px dashed var(--border); border-radius: 16px;">
+                {% csrf_token %}
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase;">Upload New Track</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <input type="text" name="title" placeholder="Track Title" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: white;">
+                    <input type="text" name="artist" placeholder="Artist (Default: YOUTHinIT)" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: white;">
+                </div>
+                <input type="file" name="audio_file" accept="audio/*" required style="width: 100%; margin-bottom: 15px; font-size: 0.8rem;">
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 10px;">Upload to Floater</button>
+            </form>
+
+            <div class="leads-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Track</th>
+                            <th>Artist</th>
+                            <th>Added</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for track in music_tracks %}
+                        <tr>
+                            <td style="font-weight: 700;">{{ track.title }}</td>
+                            <td>{{ track.artist }}</td>
+                            <td style="font-size: 0.7rem; color: var(--text-muted);">{{ track.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">No tracks uploaded.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="locationModal" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px);">
+        <div class="glass-card" style="max-width: 400px; width: 100%;">
+            <h2 style="font-family: var(--font-display); margin-bottom: 24px;">ADD NEW LOCATION</h2>
+            <form action="{% url 'create_location' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Location Name</label>
+                    <input type="text" name="name" placeholder="e.g. City Taxi #42" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label>Slug (Tracking ID)</label>
+                    <input type="text" name="slug" placeholder="e.g. taxi-42" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" onclick="closeModal('locationModal')" class="btn-outline" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="promoModal" class="custom-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px);">
+        <div class="glass-card" style="max-width: 400px; width: 100%;">
+            <h2 style="font-family: var(--font-display); margin-bottom: 24px;">ADD PROMO CODE</h2>
+            <form action="{% url 'create_promo' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Promo Code</label>
+                    <input type="text" name="code" placeholder="e.g. STARLINK20" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="e.g. 20% off IT Services" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="reward_type" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white;">
+                        <option value="PARTNER">Partner Discount</option>
+                        <option value="ARTIST">Artist Exclusive</option>
+                        <option value="TICKET">Event Ticket</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" onclick="closeModal('promoModal')" class="btn-outline" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    </script>
+        <!-- Location Chart -->
+        <div class="glass-card animate-fade-in" style="animation-delay: 0.5s;">
+            <h3 style="font-family: var(--font-display); margin-bottom: 24px; letter-spacing: 1px;">LOCATION PERFORMANCE</h3>
+            <div class="leads-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Scans</th>
+                            <th>Leads</th>
+                            <th>QR Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loc in location_stats %}
+                        <tr>
+                            <td style="font-weight: 700;">{{ loc.name }}</td>
+                            <td>{{ loc.scan_count }}</td>
+                            <td>{{ loc.lead_count }}</td>
+                            <td>
+                                <button onclick="showQR('{{ loc.name }}', '{{ loc.slug }}')" class="badge badge-secondary" style="cursor: pointer; border: 1px solid var(--secondary-color);">
+                                    Generate QR
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px);">
+        <div class="glass-card" style="max-width: 400px; width: 100%; text-align: center;">
+            <h2 id="modalTitle" style="font-family: var(--font-display); margin-bottom: 20px;">LOCATION QR</h2>
+            <div id="qrContainer" style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin-bottom: 20px;">
+                <!-- QR Image injected here -->
+            </div>
+            <p id="qrUrl" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-bottom: 20px; word-break: break-all;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeQR()" class="btn-outline" style="flex: 1;">Close</button>
+                <a id="downloadBtn" href="#" download="qr_code.png" class="btn-primary" style="flex: 1; text-align: center; justify-content: center;">Download</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showQR(name, slug) {
+            const modal = document.getElementById('qrModal');
+            const title = document.getElementById('modalTitle');
+            const container = document.getElementById('qrContainer');
+            const urlText = document.getElementById('qrUrl');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            // Construct the scan URL
+            const host = window.location.origin;
+            const scanUrl = `${host}/scan/${slug}/`;
+            
+            // Generate QR using public API
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(scanUrl)}`;
+            
+            title.innerText = name.toUpperCase();
+            urlText.innerText = scanUrl;
+            container.innerHTML = `<img src="${qrImageUrl}" alt="QR Code" style="width: 100%; display: block;">`;
+            downloadBtn.href = qrImageUrl;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeQR() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+    </script>
+
+    <!-- Reward Distribution -->
+    <div class="glass-card animate-fade-in" style="animation-delay: 0.7s; margin-bottom: 100px;">
+        <h3 style="font-family: var(--font-display); margin-bottom: 24px; letter-spacing: 1px;">REWARD PERFORMANCE</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            {% for code in code_usage %}
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-family: var(--font-mono); color: var(--secondary-color); font-weight: 700;">{{ code.code }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ code.get_reward_type_display }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.5rem; font-family: var(--font-display);">{{ code.usage_count }}</div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Claims</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('locationChart').getContext('2d');
+    
+    // Create Gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(124, 77, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(0, 229, 255, 0.05)');
+
+    const locationData = {
+        labels: [{% for loc in location_stats %}'{{ loc.name }}',{% endfor %}],
+        datasets: [{
+            label: 'Scans',
+            data: [{% for loc in location_stats %}{{ loc.scan_count }},{% endfor %}],
+            backgroundColor: gradient,
+            borderColor: '#00E5FF',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#00E5FF',
+            pointBorderColor: '#FFF',
+            pointHoverRadius: 6
+        }, {
+            label: 'Leads',
+            data: [{% for loc in location_stats %}{{ loc.lead_count }},{% endfor %}],
+            backgroundColor: 'transparent',
+            borderColor: '#FF4081',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.4,
+            pointBackgroundColor: '#FF4081'
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'line',
+        data: locationData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        font: { family: 'Space Grotesk', weight: '600' }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -2,33 +2,388 @@
 {% load static %}
 
 {% block content %}
-<section style="min-height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center;">
-    <div class="container" style="max-width: 600px;">
-        <div class="glass-card animate-fade-in">
-            <div style="width: 80px; height: 80px; background: var(--secondary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+<style>
+    main {
+        padding-top: var(--nav-h);
+    }
+
+    .success-section {
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(2rem, 6vw, 5rem) 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Background glow blobs */
+    .success-section::before {
+        content: '';
+        position: fixed;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(0, 229, 255, 0.12) 0%, transparent 70%);
+        top: 10%;
+        left: -100px;
+        pointer-events: none;
+    }
+
+    .success-section::after {
+        content: '';
+        position: fixed;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(124, 77, 255, 0.12) 0%, transparent 70%);
+        bottom: 10%;
+        right: -80px;
+        pointer-events: none;
+    }
+
+    .success-card {
+        max-width: 580px;
+        width: 100%;
+        margin: 0 auto;
+        padding: clamp(2rem, 6vw, 3.5rem);
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    /* Checkmark circle */
+    .check-ring {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 229, 255, 0.05));
+        border: 2px solid rgba(0, 229, 255, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, pulseGlow 2.5s ease-in-out infinite 0.6s;
+        box-shadow: 0 0 30px rgba(0, 229, 255, 0.25);
+    }
+
+    @keyframes popIn {
+        from {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-card h1 {
+        font-family: var(--font-display);
+        font-size: clamp(2.8rem, 8vw, 4.5rem);
+        letter-spacing: 3px;
+        line-height: 1;
+        margin-bottom: 1rem;
+        color: var(--text-main);
+    }
+
+    .success-intro {
+        color: var(--text-muted);
+        font-size: clamp(0.95rem, 2vw, 1.05rem);
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
+    }
+
+    .success-intro strong {
+        color: var(--text-main);
+    }
+
+    /* Code display */
+    .code-box {
+        background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(0, 229, 255, 0.08));
+        border: 2px dashed rgba(0, 229, 255, 0.35);
+        border-radius: 20px;
+        padding: clamp(2rem, 6vw, 3rem) clamp(1.5rem, 5vw, 2.5rem);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: visible;
+    }
+
+    .code-label {
+        position: absolute;
+        top: -13px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-color);
+        padding: 4px 16px;
+        border-radius: 50px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--secondary-color);
+        font-weight: 500;
+        border: 1px solid rgba(0, 229, 255, 0.2);
+        white-space: nowrap;
+    }
+
+    .code-value {
+        font-family: var(--font-mono);
+        font-size: clamp(2rem, 8vw, 3.5rem);
+        letter-spacing: clamp(4px, 2vw, 10px);
+        color: #fff;
+        font-weight: 500;
+        display: block;
+        text-shadow: 0 0 30px rgba(0, 229, 255, 0.5);
+        word-break: break-all;
+    }
+
+    .code-description {
+        margin-top: 1.25rem;
+        font-size: clamp(0.95rem, 2vw, 1.1rem);
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+    }
+
+    /* Copy button */
+    .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 229, 255, 0.1);
+        border: 1px solid rgba(0, 229, 255, 0.25);
+        border-radius: 50px;
+        padding: 9px 22px;
+        color: var(--secondary-color);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.2s;
+        margin-top: 1.25rem;
+        font-family: var(--font-body);
+    }
+
+    .copy-btn:hover {
+        background: rgba(0, 229, 255, 0.18);
+        transform: translateY(-1px);
+    }
+
+    .copy-btn.copied {
+        background: rgba(0, 229, 255, 0.22);
+        border-color: var(--secondary-color);
+    }
+
+    /* Partner pills */
+    .partner-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .pill {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    .pill-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    /* Screenshot note */
+    .screenshot-note {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* Actions */
+    .success-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .success-actions a {
+        min-width: 160px;
+        justify-content: center;
+    }
+
+    /* Confetti */
+    .confetti-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    }
+
+    .confetti-piece {
+        position: absolute;
+        top: -20px;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        animation: confettiFall linear forwards;
+        opacity: 0;
+    }
+
+    @keyframes confettiFall {
+        0% {
+            opacity: 1;
+            transform: translateY(0) rotate(0deg);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(110vh) rotate(720deg);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .code-value {
+            letter-spacing: 4px;
+        }
+
+        .success-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .success-actions a {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- Confetti container -->
+<div class="confetti-container" id="confetti"></div>
+
+<section class="success-section">
+    <div class="container">
+        <div class="glass-card success-card animate-fade-in">
+
+            <div class="check-ring">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--secondary-color)"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
             </div>
-            <h1 style="margin-bottom: 1rem;">Reward Unlocked!</h1>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">
-                Congratulations, <strong>{{ lead.full_name }}</strong>. Use the code below at checkout with our partners.
+
+            <h1>Reward Unlocked!</h1>
+
+            <p class="success-intro">
+                Congratulations, <strong>{{ lead.full_name }}</strong>! Your exclusive promo code is ready. Use it at
+                checkout with any of our partners below.
             </p>
-            
-            <div style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), rgba(0, 229, 255, 0.1)); padding: 3rem 2rem; border-radius: 24px; border: 2px dashed var(--secondary-color); margin-bottom: 2rem; position: relative;">
-                <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--bg-color); padding: 0 15px; font-size: 0.8rem; letter-spacing: 2px; color: var(--secondary-color); font-weight: 800;">YOUR UNIQUE CODE</div>
-                <span style="font-family: 'Outfit', sans-serif; font-size: 3.5rem; letter-spacing: 8px; color: #fff; font-weight: 900; text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);">
-                    {{ code.code }}
-                </span>
-                <p style="font-size: 1.1rem; color: #fff; margin-top: 1.5rem; font-weight: 600;">{{ code.description }}</p>
+
+            <!-- Code Box -->
+            <div class="code-box">
+                <span class="code-label">Your Unique Code</span>
+                <span class="code-value" id="code-display">{{ code.code }}</span>
+                <p class="code-description">{{ code.description }}</p>
+                <button class="copy-btn" id="copy-btn" onclick="copyCode()">
+                    <svg id="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                    </svg>
+                    <span id="copy-text">Copy Code</span>
+                </button>
             </div>
-            
-            <p style="font-size: 0.8rem; color: var(--text-muted);">
-                A copy of this code has been sent to your device. Screenshot this page for your records.
+
+            <!-- Valid at partners -->
+            <div class="partner-pills">
+                <div class="pill"><span class="pill-dot" style="background:var(--secondary-color);"></span>Starlink ZW
+                </div>
+                <div class="pill"><span class="pill-dot" style="background:var(--primary-color);"></span>IT Gear Store
+                </div>
+                <div class="pill"><span class="pill-dot" style="background:var(--accent-color);"></span>Cloud Services
+                </div>
+                <div class="pill"><span class="pill-dot" style="background:#FFD700;"></span>YOUTHinIT Shop</div>
+            </div>
+
+            <p class="screenshot-note">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
+                </svg>
+                Screenshot this page — a copy was also sent to your device.
             </p>
-            
-            <div style="margin-top: 2rem;">
-                <a href="/" class="btn-primary">Return Home</a>
+
+            <div class="success-actions">
+                <a href="/" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                    Return Home
+                </a>
+                <a href="#campaign" class="btn-outline">
+                    Share With Friends
+                </a>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    // ─── Copy code ──────────────────────────────────────
+    function copyCode() {
+        const code = document.getElementById('code-display').textContent.trim();
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('copy-btn');
+            const txt = document.getElementById('copy-text');
+            const icon = document.getElementById('copy-icon');
+            btn.classList.add('copied');
+            txt.textContent = 'Copied!';
+            icon.innerHTML = '<path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                txt.textContent = 'Copy Code';
+                icon.innerHTML = '<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>';
+            }, 2500);
+        });
+    }
+
+    // ─── Confetti burst ────────────────────────────────
+    (function spawnConfetti() {
+        const container = document.getElementById('confetti');
+        const colors = ['#7C4DFF', '#00E5FF', '#FF4081', '#FFD700', '#fff'];
+        const total = window.innerWidth < 600 ? 40 : 80;
+
+        for (let i = 0; i < total; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const size = Math.random() * 8 + 5;
+            el.style.cssText = `
+                left: ${Math.random() * 100}%;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                animation-duration: ${Math.random() * 2 + 2}s;
+                animation-delay: ${Math.random() * 1.5}s;
+            `;
+            container.appendChild(el);
+        }
+
+        // Clean up after animations finish
+        setTimeout(() => container.remove(), 5000);
+    })();
+</script>
 {% endblock %}

@@ -1,36 +1,601 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Artist & IT Rewards{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* ─── Reset & Base ─────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-color: #7C4DFF;
+            --secondary-color: #00E5FF;
+            --accent-color: #FF4081;
+            --bg-color: #06060E;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --text-main: #F0EEFF;
+            --text-muted: rgba(240, 238, 255, 0.5);
+            --border: rgba(255, 255, 255, 0.08);
+            --player-h: 76px;
+            --nav-h: 72px;
+            --font-display: 'Bebas Neue', sans-serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --glow-purple: 0 0 40px rgba(124, 77, 255, 0.35);
+            --glow-cyan: 0 0 40px rgba(0, 229, 255, 0.35);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: calc(var(--player-h) + 20px);
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 clamp(16px, 5vw, 48px);
+        }
+
+        /* ─── Navigation ─────────────────────────────────── */
+        .site-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            height: var(--nav-h);
+            display: flex;
+            align-items: center;
+            background: rgba(6, 6, 14, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .site-nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            text-decoration: none;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .nav-logo span {
+            color: var(--secondary-color);
+        }
+
+        /* Desktop links */
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hamburger */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            background: none;
+            border: none;
+            z-index: 1100;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-main);
+            border-radius: 2px;
+            transition: transform 0.35s ease, opacity 0.35s ease, width 0.35s ease;
+            transform-origin: center;
+        }
+
+        /* Animated X state */
+        .nav-hamburger.open span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-hamburger.open span:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-hamburger.open span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        /* Mobile menu drawer */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: var(--nav-h);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(6, 6, 14, 0.98);
+            backdrop-filter: blur(30px);
+            z-index: 999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2.5rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .mobile-menu.open {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mobile-menu a {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 10vw, 4rem);
+            color: var(--text-main);
+            text-decoration: none;
+            letter-spacing: 3px;
+            transition: color 0.2s;
+        }
+
+        .mobile-menu a:hover {
+            color: var(--secondary-color);
+        }
+
+        .mobile-menu-badge {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -1rem;
+        }
+
+        /* ─── Buttons ─────────────────────────────────── */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--primary-color), #5C35CC);
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 4px 24px rgba(124, 77, 255, 0.4);
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(124, 77, 255, 0.6);
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 13px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--secondary-color);
+            background: rgba(0, 229, 255, 0.06);
+            transform: translateY(-2px);
+        }
+
+        /* ─── Glass Card ─────────────────────────────────── */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* ─── Forms ─────────────────────────────────── */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            background: rgba(124, 77, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(240, 238, 255, 0.25);
+        }
+
+        /* ─── Animations ─────────────────────────────────── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(0, 229, 255, 0.6);
+            }
+        }
+
+        .animate-fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.7s ease forwards;
+        }
+
+        /* ─── Music Player ─────────────────────────────────── */
+        .music-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--player-h);
+            background: rgba(10, 10, 22, 0.95);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 16px;
+            padding: 0 clamp(12px, 4vw, 32px);
+            z-index: 900;
+        }
+
+        .progress-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.07);
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 35%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+            position: relative;
+            transition: width 0.1s linear;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: -3px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0, 229, 255, 0.8);
+        }
+
+        .player-art {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-info {
+            min-width: 0;
+        }
+
+        .player-info h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-main);
+        }
+
+        .player-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-family: var(--font-mono);
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .control-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .play-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #5C35CC);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(124, 77, 255, 0.4);
+            flex-shrink: 0;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 24px rgba(124, 77, 255, 0.6);
+        }
+
+        /* ─── Mobile Breakpoints ─────────────────────────────────── */
+        @media (max-width: 768px) {
+            :root {
+                --nav-h: 64px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .nav-hamburger {
+                display: flex;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+                border-radius: 18px;
+            }
+
+            .control-btn:first-child,
+            .control-btn:last-child {
+                display: none;
+            }
+
+            .music-player {
+                grid-template-columns: auto 1fr auto;
+                gap: 12px;
+                padding: 0 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .player-info h4 {
+                font-size: 0.82rem;
+            }
+
+            .player-info p {
+                display: none;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <nav style="padding: 20px 0; position: fixed; width: 100%; z-index: 100; backdrop-filter: blur(10px);">
-        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="logo" style="font-weight: 800; font-size: 1.5rem; letter-spacing: -1px;">
-                <span style="color: var(--secondary-color);">ARTIST</span>NAME
-            </div>
+    <!-- ─── Navigation ─────────────────────────────────── -->
+    <nav class="site-nav">
+        <div class="container">
+            <a href="/" class="nav-logo"><span>YOUTHin</span>IT</a>
+
             <div class="nav-links">
-                <a href="/" style="color: white; text-decoration: none; margin-left: 30px; font-weight: 600;">Home</a>
-                <a href="#campaign" style="color: white; text-decoration: none; margin-left: 30px; font-weight: 600;">Rewards</a>
+                <a href="/">Home</a>
+                {% if user.is_staff %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'logout' %}" class="btn-outline" style="padding: 8px 20px; font-size: 0.8rem; border-color: var(--accent-color); color: var(--accent-color);">Logout</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn-outline" style="padding: 8px 20px; font-size: 0.8rem;">Sign In</a>
+                {% endif %}
+                <a href="#listen">Music</a>
+                <a href="#campaign">Rewards</a>
             </div>
+
+            <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile menu">
+        <a href="/" onclick="closeMenu()">Home</a>
+        {% if user.is_staff %}
+        <a href="{% url 'dashboard' %}" onclick="closeMenu()">Dashboard</a>
+        <a href="{% url 'logout' %}" onclick="closeMenu()" style="color: var(--accent-color);">Logout</a>
+        {% endif %}
+        <a href="#listen" onclick="closeMenu()">Music</a>
+        <a href="#campaign" onclick="closeMenu()">Rewards</a>
+        <p class="mobile-menu-badge">YOUTHinIT © 2026</p>
+    </div>
 
     <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Music Player -->
+    <!-- ─── Music Player ─────────────────────────────────── -->
     <div class="music-player">
-        <div class="progress-bar-container">
+        <div class="progress-bar-container" id="progress-container">
             <div class="progress-bar" id="player-progress"></div>
         </div>
         <div class="player-art">
@@ -38,22 +603,164 @@
         </div>
         <div class="player-info">
             <h4 id="track-name">Midnight Protocol</h4>
-            <p id="artist-name">Artist Name</p>
+            <p id="artist-name">YOUTHinIT</p>
         </div>
         <div class="player-controls">
-            <button class="control-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6L18 18V6z"></path></svg>
+            <button class="control-btn" id="prev-btn" title="Previous">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 6h2v12H6zm3.5 6L18 18V6z" />
+                </svg>
             </button>
-            <button class="play-btn" id="master-play">
-                <svg id="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+            <button class="play-btn" id="master-play" title="Play / Pause">
+                <svg id="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
             </button>
-            <button class="control-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"></path></svg>
+            <button class="control-btn" id="next-btn" title="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 18l8.5-6L6 6zm9-12v12h2V6z" />
+                </svg>
             </button>
         </div>
+        <audio id="main-audio" preload="auto"></audio>
     </div>
 
+    <script>
+        const playlist = [
+            {% for track in music_tracks %}
+            {
+                name: "{{ track.title|escapejs }}",
+                artist: "{{ track.artist|escapejs }}",
+                url: "{{ track.audio_file.url|escapejs }}"
+            },
+            {% empty %}
+            {
+                name: "Midnight Protocol",
+                artist: "YOUTHinIT",
+                url: "{% static 'audio/track1.mp3' %}"
+            }
+            {% endfor %}
+        ];
+
+        let currentTrackIndex = 0;
+        const audio = document.getElementById('main-audio');
+        const playBtn = document.getElementById('master-play');
+        const playIcon = document.getElementById('play-icon');
+        const trackNameDisplay = document.getElementById('track-name');
+        const artistNameDisplay = document.getElementById('artist-name');
+        const progressBar = document.getElementById('player-progress');
+        const progressContainer = document.getElementById('progress-container');
+
+        function loadTrack(index) {
+            const track = playlist[index];
+            if (!track || !track.url) return;
+            
+            audio.src = track.url;
+            trackNameDisplay.innerText = track.name;
+            artistNameDisplay.innerText = track.artist;
+            audio.load();
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+            } else {
+                audio.pause();
+                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+            }
+        }
+
+        playBtn.addEventListener('click', togglePlay);
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            loadTrack(currentTrackIndex);
+            audio.play();
+            playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+            loadTrack(currentTrackIndex);
+            audio.play();
+            playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = percent + '%';
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            const width = progressContainer.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        });
+
+        audio.addEventListener('ended', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+            loadTrack(currentTrackIndex);
+            audio.play();
+        });
+
+        // Init
+        if (playlist.length > 0) {
+            loadTrack(0);
+        }
+    </script>
+
+    <footer style="padding: 60px 0; border-top: 1px solid var(--border); text-align: center; opacity: 0.7;">
+        <div class="container">
+            <p style="font-size: 0.85rem; letter-spacing: 1px; color: var(--text-muted);">
+                YOUTHinIT © 2026 | <a href="{% url 'login' %}" style="color: inherit; text-decoration: none;">Admin Access</a>
+            </p>
+            <p style="margin-top: 12px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;">
+                Designed by <a href="https://fluxi.agency" target="_blank" style="color: var(--secondary-color); font-weight: 700; text-decoration: none;">FLUXI.AGENCY</a>
+            </p>
+        </div>
+    </footer>
+
     <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // ─── Hamburger ──────────────────────────────
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        hamburger.addEventListener('click', () => {
+            const isOpen = hamburger.classList.toggle('open');
+            hamburger.setAttribute('aria-expanded', isOpen);
+            if (isOpen) {
+                mobileMenu.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            } else {
+                closeMenu();
+            }
+        });
+
+        function closeMenu() {
+            hamburger.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+            mobileMenu.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (mobileMenu.classList.contains('open') &&
+                !mobileMenu.contains(e.target) &&
+                !hamburger.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMenu();
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
